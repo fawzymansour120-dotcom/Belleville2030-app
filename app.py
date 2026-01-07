@@ -4,7 +4,28 @@ import pandas as pd
 # 1. إعداد الصفحة
 st.set_page_config(page_title="Mina's Belleville 2030", page_icon="🏗️", layout="wide")
 
-# 2. تصميم الأزرار التفاعلية (الأكشن)
+# 2. نظام الباسورد (بوابة الدخول)
+if 'authenticated' not in st.session_state:
+    st.session_state.authenticated = False
+
+def check_password():
+    st.markdown("<h2 style='text-align: center;'>Bonjour Mina ☕</h2>", unsafe_allow_html=True)
+    password = st.text_input("Veuillez entrer le mot de passe (ادخل كلمة المرور)", type="password")
+    if st.button("Entrer"):
+        if password == "1234":
+            st.session_state.authenticated = True
+            st.rerun()
+        else:
+            st.error("Mot de passe incorrect (الباسورد غلط يا هندسة)")
+
+# لو لسه مكلمش الدخول، يعرض صفحة الباسورد ويوقف الكود هنا
+if not st.session_state.authenticated:
+    check_password()
+    st.stop()
+
+# --- لو الباسورد صح، الكود اللي تحت ده هو اللي هيشتغل ---
+
+# 3. تصميم الأزرار التفاعلية (CSS)
 st.markdown("""
     <style>
     div.stButton > button {
@@ -23,34 +44,28 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 3. دالة جلب البيانات مع حماية ضد الأخطاء
+# 4. دالة جلب البيانات من جوجل شيت
 def get_data():
     sheet_id = "1-iAlhlDViZ_dNIjRfv6PRTEA8RPI_YzSgwCvZGrlYeA"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
     try:
         data = pd.read_csv(url)
-        # التأكد من تنظيف المسافات في أسماء الأعمدة
         data.columns = [c.strip() for c in data.columns]
         return data
     except:
-        # بيانات احتياطية في حال فشل الاتصال بالشيت
-        return pd.DataFrame({
-            'Mots': ['Paris', 'Manger', 'Calm'],
-            'Type': ['N', 'v', 'adj'],
-            'المعنى': ['باريس', 'يأكل', 'هادئ']
-        })
+        return pd.DataFrame(columns=["Mots", "Type", "المعنى"])
 
 df = get_data()
 
-# 4. إدارة حالة الفلتر (الأكشن)
+# 5. إدارة حالة الفلتر
 if 'filter_type' not in st.session_state:
     st.session_state.filter_type = 'All'
 
-# 5. الواجهة
-st.title("Bonjour Mina ☕")
-st.markdown("### 🇫🇷 Dashboard Interactif - Belleville")
+st.title("Bienvenue, Mina! 🏗️")
+st.markdown("### 🇫🇷 Dashboard Interactif - Belleville 2030")
+st.divider()
 
-# حساب الأعداد بأمان
+# حساب الأعداد
 total = len(df)
 noms = len(df[df['Type'].str.contains('N', na=False)]) if 'Type' in df.columns else 0
 verbes = len(df[df['Type'].str.contains('v', na=False)]) if 'Type' in df.columns else 0
@@ -77,8 +92,9 @@ else:
     filtered_df = df[df['Type'].str.contains(st.session_state.filter_type, na=False)]
     st.subheader(f"Filtré par: {st.session_state.filter_type}")
 
-# عرض الجدول النهائي
+# عرض الجدول
 st.table(filtered_df)
 
-if st.sidebar.button("🔄 Refresh"):
+if st.sidebar.button("🔄 Déconnexion / Logout"):
+    st.session_state.authenticated = False
     st.rerun()
