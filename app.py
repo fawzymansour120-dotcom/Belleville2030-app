@@ -8,9 +8,9 @@ st.set_page_config(page_title="Belleville 2030", page_icon="🏗️", layout="wi
 if 'theme' not in st.session_state:
     st.session_state.theme = 'light'
 
-# الألوان اللي انت اخترتها يا هندسة
+# الألوان المعتمدة من قبلك
 MY_BLUE = "#2596be" # لون الزراير العادي
-MY_GREEN = "#24bf57" # لون الزر النشط بعد الضغط
+MY_GREEN = "#24bf57" # لون الزر النشط
 
 # 3. واجهة التنسيق (CSS)
 if st.session_state.theme == 'light':
@@ -27,28 +27,34 @@ st.markdown(f"""
     .stApp {{ background-color: {bg_color}; color: {text_color}; }}
     h1, h2, p, span {{ color: {text_color} !important; }}
     
-    /* تنسيق أزرار الفلتر الأربعة (استخدام اللون الأزرق اللي اخترته) */
+    /* تنسيق أزرار الفلتر */
     .stButton > button {{
         height: 110px !important;
         background-color: {MY_BLUE} !important;
-        color: white !important; /* الخط أبيض سميك زي ما اتفقنا */
+        color: white !important;
         border: 1px solid {border_color} !important;
         font-weight: 900 !important;
         font-size: 20px !important;
         border-radius: 12px !important;
-        transition: 0.3s;
     }}
 
-    /* الهيدر الشخصي */
+    /* الهيدر الشخصي وصورة الكلب */
     .header-container {{
         display: flex;
         align-items: center;
         gap: 12px;
         background: {bg_color};
-        padding: 8px 15px;
-        border-radius: 30px;
+        padding: 5px 15px;
+        border-radius: 50px;
         border: 1px solid {border_color};
         width: fit-content;
+    }}
+    .dog-image {{
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid {MY_BLUE};
     }}
     </style>
     """, unsafe_allow_html=True)
@@ -72,19 +78,20 @@ if not st.session_state.authenticated:
                 st.rerun()
     st.stop()
 
-# 5. الهيدر الداخلي
+# 5. الهيدر الداخلي (صورة الكلب + الترحيب + التبديل)
 col_head, col_toggle = st.columns([0.8, 0.2])
 with col_head:
-    gemini_pic = "https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d473530393333333333.svg"
+    # رابط صورة كلب أبيض صغير جميل
+    dog_url = "https://images.dog.ceo/breeds/samoyed/n02111889_1130.jpg"
     st.markdown(f"""
         <div class="header-container">
-            <img src="{gemini_pic}" style="width:30px;">
-            <span style="font-weight:bold;">Bonjour, {st.session_state.user_name}</span>
+            <img src="{dog_url}" class="dog-image">
+            <span style="font-size: 1.2rem; font-weight: bold;">Bonjour, {st.session_state.user_name}</span>
         </div>
         """, unsafe_allow_html=True)
 
 with col_toggle:
-    label = "🌙 Dark Mode" if st.session_state.theme == 'light' else "☀️ Light Mode"
+    label = "🌙 Dark" if st.session_state.theme == 'light' else "☀️ Light"
     if st.button(label):
         st.session_state.theme = 'dark' if st.session_state.theme == 'light' else 'light'
         st.rerun()
@@ -115,7 +122,6 @@ adjs = len(df[df['Type'].fillna('').str.contains('adj', na=False)]) if 'Type' in
 
 c1, c2, c3, c4 = st.columns(4)
 
-# تطبيق الألوان الجديدة هنا (الأخضر للنشط والأزرق للعادي)
 def draw_button(label, val, key):
     is_active = st.session_state.filter == val
     btn_bg = MY_GREEN if is_active else MY_BLUE
