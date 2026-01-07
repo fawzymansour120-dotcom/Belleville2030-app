@@ -4,47 +4,79 @@ import pandas as pd
 # 1. إعداد الصفحة
 st.set_page_config(page_title="Mina's Belleville 2030", page_icon="🏗️", layout="wide")
 
-# 2. نظام الباسورد (بوابة الدخول)
-if 'authenticated' not in st.session_state:
-    st.session_state.authenticated = False
-
-def check_password():
-    st.markdown("<h2 style='text-align: center;'>Bonjour Mina ☕</h2>", unsafe_allow_html=True)
-    password = st.text_input("Veuillez entrer le mot de passe (ادخل كلمة المرور)", type="password")
-    if st.button("Entrer"):
-        if password == "1234":
-            st.session_state.authenticated = True
-            st.rerun()
-        else:
-            st.error("Mot de passe incorrect (الباسورد غلط يا هندسة)")
-
-# لو لسه مكلمش الدخول، يعرض صفحة الباسورد ويوقف الكود هنا
-if not st.session_state.authenticated:
-    check_password()
-    st.stop()
-
-# --- لو الباسورد صح، الكود اللي تحت ده هو اللي هيشتغل ---
-
-# 3. تصميم الأزرار التفاعلية (CSS)
+# 2. تصميم CSS للألوان والأكشن (المحور الجمالي)
 st.markdown("""
     <style>
-    div.stButton > button {
-        width: 100%;
-        background-color: #161b22;
-        color: #58a6ff;
-        border: 2px solid #58a6ff;
-        border-radius: 12px;
-        padding: 15px;
-        font-weight: bold;
-    }
-    div.stButton > button:hover {
-        background-color: #58a6ff;
+    /* تصميم زر الدخول */
+    div.stButton > button:first-child {
+        background: linear-gradient(45deg, #4f8bf9, #2b5cb7);
         color: white;
+        border-radius: 25px;
+        padding: 10px 30px;
+        font-size: 18px;
+        font-weight: bold;
+        border: none;
+        transition: 0.3s;
+        width: 100%;
+    }
+    div.stButton > button:first-child:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 15px rgba(79, 139, 249, 0.4);
+    }
+    /* تصميم اسم المستخدم أعلى اليسار */
+    .user-greeting {
+        position: absolute;
+        top: -50px;
+        left: 0;
+        color: #58a6ff;
+        font-weight: bold;
+        font-size: 18px;
+    }
+    /* تنسيقات المربعات التفاعلية */
+    .metric-btn {
+        border: 2px solid #58a6ff;
+        border-radius: 15px;
+        padding: 15px;
+        text-align: center;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 4. دالة جلب البيانات من جوجل شيت
+# 3. نظام الدخول المتطور
+if 'authenticated' not in st.session_state:
+    st.session_state.authenticated = False
+if 'user_name' not in st.session_state:
+    st.session_state.user_name = ""
+
+def login_page():
+    st.markdown("<h1 style='text-align: center;'>Bonjour 👋</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; font-size: 1.2rem;'>Veuillez entrer vos معلومات (من فضلك أدخل بياناتك)</p>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        name = st.text_input("ادخل اسمك الأول (Prénom)")
+        password = st.text_input("ادخل الباسورد (Mot de passe)", type="password")
+        
+        if st.button("Entrer 🚀"):
+            if password == "1234" and name.strip() != "":
+                st.session_state.authenticated = True
+                st.session_state.user_name = name
+                st.rerun()
+            elif name.strip() == "":
+                st.warning("من فضلك اكتب اسمك الأول")
+            else:
+                st.error("الباسورد غير صحيح يا هندسة")
+
+if not st.session_state.authenticated:
+    login_page()
+    st.stop()
+
+# --- الكود بعد الدخول بنجاح ---
+
+# عرض الترحيب أعلى اليسار
+st.markdown(f"<div class='user-greeting'>👤 Bonjour, {st.session_state.user_name}</div>", unsafe_allow_html=True)
+
+# 4. دالة جلب البيانات
 def get_data():
     sheet_id = "1-iAlhlDViZ_dNIjRfv6PRTEA8RPI_YzSgwCvZGrlYeA"
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
@@ -57,12 +89,11 @@ def get_data():
 
 df = get_data()
 
-# 5. إدارة حالة الفلتر
+# إدارة الفلتر
 if 'filter_type' not in st.session_state:
     st.session_state.filter_type = 'All'
 
-st.title("Bienvenue, Mina! 🏗️")
-st.markdown("### 🇫🇷 Dashboard Interactif - Belleville 2030")
+st.title("Belleville 2030 🏗️")
 st.divider()
 
 # حساب الأعداد
@@ -71,7 +102,7 @@ noms = len(df[df['Type'].str.contains('N', na=False)]) if 'Type' in df.columns e
 verbes = len(df[df['Type'].str.contains('v', na=False)]) if 'Type' in df.columns else 0
 adjs = len(df[df['Type'].str.contains('adj', na=False)]) if 'Type' in df.columns else 0
 
-# صف الأزرار (الأكشن)
+# صف الأزرار التفاعلية
 c1, c2, c3, c4 = st.columns(4)
 with c1:
     if st.button(f"📊 Mots\n{total}"): st.session_state.filter_type = 'All'
@@ -84,17 +115,16 @@ with c4:
 
 st.divider()
 
-# تصفية الجدول بناءً على الضغط
+# تصفية وعرض البيانات
 if st.session_state.filter_type == 'All':
     filtered_df = df
-    st.subheader("Toute la liste (الكل)")
+    st.subheader("Dictionnaire complet")
 else:
     filtered_df = df[df['Type'].str.contains(st.session_state.filter_type, na=False)]
-    st.subheader(f"Filtré par: {st.session_state.filter_type}")
+    st.subheader(f"Catégorie: {st.session_state.filter_type}")
 
-# عرض الجدول
 st.table(filtered_df)
 
-if st.sidebar.button("🔄 Déconnexion / Logout"):
+if st.sidebar.button("Logout"):
     st.session_state.authenticated = False
     st.rerun()
