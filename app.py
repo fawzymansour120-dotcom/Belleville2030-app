@@ -1,82 +1,75 @@
 import streamlit as st
 import pandas as pd
 
-# إعداد الصفحة وتصميمها بشكل هندسي شيك
-st.set_page_config(page_title="Mina's Belleville", page_icon="🏗️", layout="wide")
+# 1. إعداد الصفحة وتصميم هندسي شيك
+st.set_page_config(page_title="Mina's Belleville 2030", page_icon="🏗️", layout="wide")
 
-# تصميم CSS للمربعات (المنفصلة)
+# تصميم المربعات (CSS)
 st.markdown("""
     <style>
-    .metric-container {
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-        margin-bottom: 30px;
-    }
     .metric-card {
         background-color: #1e1e1e;
         border: 2px solid #4f8bf9;
         border-radius: 15px;
         padding: 20px;
-        width: 30%;
         text-align: center;
-        box-shadow: 2px 4px 12px rgba(0,0,0,0.4);
+        box-shadow: 2px 4px 10px rgba(0,0,0,0.3);
     }
-    .metric-label { font-size: 18px; color: #4f8bf9; font-weight: bold; margin-bottom: 10px; }
-    .metric-value { font-size: 40px; color: white; font-weight: bold; }
+    .metric-label { font-size: 18px; color: #4f8bf9; font-weight: bold; }
+    .metric-value { font-size: 35px; color: white; font-weight: bold; margin: 10px 0; }
     </style>
     """, unsafe_allow_html=True)
 
-# رابط جوجل شيت
+# 2. ربط جوجل شيت (الرابط الخاص بك)
 sheet_id = "1-iAlhlDViZ_dNIjRfv6PRTEA8RPI_YzSgwCvZGrlYeA"
 sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
 
 def load_data():
     try:
+        # إلغاء التخزين المؤقت لضمان تحديث البيانات فوراً
         return pd.read_csv(sheet_url)
     except:
-        return pd.DataFrame(columns=["الكلمة", "النوع", "المعنى"])
+        return pd.DataFrame(columns=["Mots", "Type", "المعنى"])
 
 df = load_data()
 
-# العنوان
+# 3. واجهة التطبيق
 st.title("Bonjour Mina ☕")
-st.markdown("#### Projet de Belleville 2030 - Vision Architecturale")
+st.markdown("#### Magazine Belleville - Progrès Linguistique")
 st.divider()
 
-# العدادات في مربعات منفصلة (Cards)
-n_mots = len(df)
-n_noms = len(df[df['النوع'].str.contains('اسم', na=False)]) if not df.empty else 0
-n_verbes = len(df[df['النوع'].str.contains('فعل', na=False)]) if not df.empty else 0
+# 4. حساب العدادات بناءً على الرموز في الشيت (N, v, adj)
+total_mots = len(df)
+# البحث عن حرف N (اسم) أو v (فعل) أو adj (صفة) في عمود Type
+n_noms = len(df[df['Type'].str.contains('N', case=False, na=False)]) if not df.empty else 0
+n_verbes = len(df[df['Type'].str.contains('v', case=False, na=False)]) if not df.empty else 0
+n_adj = len(df[df['Type'].str.contains('adj', case=False, na=False)]) if not df.empty else 0
 
-st.markdown(f"""
-    <div class="metric-container">
-        <div class="metric-card">
-            <div class="metric-label">📊 Mots (الكلمات)</div>
-            <div class="metric-value">{n_mots}</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">🏛️ Noms (الأسماء)</div>
-            <div class="metric-value">{n_noms}</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">🚀 Verbes (الأفعال)</div>
-            <div class="metric-value">{n_verbes}</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+# عرض المربعات في 4 أعمدة (إضافة الصفات)
+col1, col2, col3, col4 = st.columns(4)
 
-# البحث
-search = st.text_input("🔍 Rechercher une expression... (ابحث هنا)")
+with col1:
+    st.markdown(f'<div class="metric-card"><div class="metric-label">📊 Mots</div><div class="metric-value">{total_mots}</div></div>', unsafe_allow_html=True)
+with col2:
+    st.markdown(f'<div class="metric-card"><div class="metric-label">🏛️ Noms (N)</div><div class="metric-value">{n_noms}</div></div>', unsafe_allow_html=True)
+with col3:
+    st.markdown(f'<div class="metric-card"><div class="metric-label">🚀 Verbes (v)</div><div class="metric-value">{n_verbes}</div></div>', unsafe_allow_html=True)
+with col4:
+    st.markdown(f'<div class="metric-card"><div class="metric-label">🎨 Adjectifs</div><div class="metric-value">{n_adj}</div></div>', unsafe_allow_html=True)
+
+st.divider()
+
+# 5. محرك البحث والجدول
+search = st.text_input("🔍 Rechercher une expression... (ابحث عن كلمة)")
 
 if search:
-    res = df[df['الكلمة'].str.contains(search, case=False, na=False) | 
-             df['المعنى'].str.contains(search, case=False, na=False)]
-    st.dataframe(res, use_container_width=True)
+    # البحث في كل الأعمدة
+    mask = df.apply(lambda row: row.astype(str).str.contains(search, case=False).any(), axis=1)
+    st.table(df[mask])
 else:
-    st.subheader("Ma Liste (قائمة كلماتي)")
+    st.subheader("Dictionnaire personnel (قاموسك الشخصي)")
     st.dataframe(df, use_container_width=True)
 
-# زر التحديث في الجنب
-if st.sidebar.button("🔄 Actualiser"):
+# زر تحديث في القائمة الجانبية
+if st.sidebar.button("🔄 Actualiser (تحديث)"):
     st.rerun()
