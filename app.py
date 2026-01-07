@@ -8,50 +8,45 @@ st.set_page_config(page_title="Belleville 2030", page_icon="🏗️", layout="wi
 if 'theme' not in st.session_state:
     st.session_state.theme = 'light'
 
-# الألوان المعتمدة من قبلك
-MY_BLUE = "#2596be" # لون الزراير العادي
-MY_GREEN = "#24bf57" # لون الزر النشط
+MY_BLUE = "#2596be" 
+MY_GREEN = "#24bf57" 
 
 # 3. واجهة التنسيق (CSS)
 if st.session_state.theme == 'light':
-    bg_color = "#FFFFFF"
-    text_color = "#121212"
-    border_color = "#dee2e6"
+    bg_color = "#FFFFFF"; text_color = "#121212"; border_color = "#dee2e6"
 else:
-    bg_color = "#121212"
-    text_color = "#FFFFFF"
-    border_color = "#333333"
+    bg_color = "#121212"; text_color = "#FFFFFF"; border_color = "#333333"
 
 st.markdown(f"""
     <style>
     .stApp {{ background-color: {bg_color}; color: {text_color}; }}
-    h1, h2, p, span {{ color: {text_color} !important; }}
     
     /* تنسيق أزرار الفلتر */
     .stButton > button {{
-        height: 110px !important;
+        height: 100px !important;
         background-color: {MY_BLUE} !important;
         color: white !important;
         border: 1px solid {border_color} !important;
         font-weight: 900 !important;
-        font-size: 20px !important;
-        border-radius: 12px !important;
+        font-size: 18px !important;
+        border-radius: 15px !important;
     }}
 
     /* الهيدر الشخصي وصورة الكلب */
     .header-container {{
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 15px;
         background: {bg_color};
-        padding: 5px 15px;
+        padding: 10px 20px;
         border-radius: 50px;
-        border: 1px solid {border_color};
+        border: 2px solid {MY_BLUE};
         width: fit-content;
+        margin-bottom: 20px;
     }}
     .dog-image {{
-        width: 45px;
-        height: 45px;
+        width: 50px;
+        height: 50px;
         border-radius: 50%;
         object-fit: cover;
         border: 2px solid {MY_BLUE};
@@ -65,8 +60,6 @@ if 'authenticated' not in st.session_state:
 
 if not st.session_state.authenticated:
     st.markdown("<h1 style='text-align: center;'>Bonjour 👋</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #d4af37;'>BELLEVILLE 2030</p>", unsafe_allow_html=True)
-    
     col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
         name = st.text_input("Prénom")
@@ -78,15 +71,15 @@ if not st.session_state.authenticated:
                 st.rerun()
     st.stop()
 
-# 5. الهيدر الداخلي (صورة الكلب + الترحيب + التبديل)
+# 5. الهيدر الداخلي (رابط صورة الكلب الجديد الموثوق)
 col_head, col_toggle = st.columns([0.8, 0.2])
 with col_head:
-    # رابط صورة كلب أبيض صغير جميل
-    dog_url = "https://images.dog.ceo/breeds/samoyed/n02111889_1130.jpg"
+    # رابط لصورة كلب أبيض صغير من Pixabay (رابط مباشر ومستقر)
+    dog_url = "https://cdn.pixabay.com/photo/2017/01/20/21/22/pomeranian-1996001_1280.jpg"
     st.markdown(f"""
         <div class="header-container">
             <img src="{dog_url}" class="dog-image">
-            <span style="font-size: 1.2rem; font-weight: bold;">Bonjour, {st.session_state.user_name}</span>
+            <span style="font-size: 1.3rem; font-weight: bold;">Bonjour, {st.session_state.user_name}</span>
         </div>
         """, unsafe_allow_html=True)
 
@@ -130,10 +123,10 @@ def draw_button(label, val, key):
         st.session_state.filter = val
         st.rerun()
 
-with c1: draw_button(f"📖\nTOTAL\n{total}", 'All', 'b1')
-with c2: draw_button(f"🏛️\nNOMS\n{noms}", 'N', 'b2')
-with c3: draw_button(f"🚀\nVERBES\n{verbes}", 'v', 'b3')
-with c4: draw_button(f"🎨\nADJECTIFS\n{adjs}", 'adj', 'b4')
+with c1: draw_button(f"📖 TOTAL\n{total}", 'All', 'b1')
+with c2: draw_button(f"🏛️ NOMS\n{noms}", 'N', 'b2')
+with c3: draw_button(f"🚀 VERBES\n{verbes}", 'v', 'b3')
+with c4: draw_button(f"🎨 ADJECTIFS\n{adjs}", 'adj', 'b4')
 
 st.divider()
 
