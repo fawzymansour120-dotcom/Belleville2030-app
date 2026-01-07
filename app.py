@@ -45,8 +45,8 @@ st.markdown(f"""
         margin-bottom: 20px;
     }}
     .dog-image {{
-        width: 50px;
-        height: 50px;
+        width: 55px;
+        height: 55px;
         border-radius: 50%;
         object-fit: cover;
         border: 2px solid {MY_BLUE};
@@ -71,14 +71,14 @@ if not st.session_state.authenticated:
                 st.rerun()
     st.stop()
 
-# 5. الهيدر الداخلي (رابط صورة الكلب الجديد الموثوق)
+# 5. الهيدر الداخلي (رابط الصورة المباشر من جوجل درايف)
 col_head, col_toggle = st.columns([0.8, 0.2])
 with col_head:
-    # رابط لصورة كلب أبيض صغير من Pixabay (رابط مباشر ومستقر)
-    dog_url = "https://cdn.pixabay.com/photo/2017/01/20/21/22/pomeranian-1996001_1280.jpg"
+    # تم تعديل الرابط ليصبح رابطاً مباشراً للصورة من الدرايف الخاص بك
+    dog_drive_url = "https://lh3.googleusercontent.com/u/0/d/1702lVuPmDClSvkfvpdTwYJ5_aDpRvcQU"
     st.markdown(f"""
         <div class="header-container">
-            <img src="{dog_url}" class="dog-image">
+            <img src="{dog_drive_url}" class="dog-image">
             <span style="font-size: 1.3rem; font-weight: bold;">Bonjour, {st.session_state.user_name}</span>
         </div>
         """, unsafe_allow_html=True)
@@ -93,7 +93,7 @@ with col_toggle:
 @st.cache_data(ttl=30)
 def get_data():
     sheet_id = "1-iAlhlDViZ_dNIjRfv6PRTEA8RPI_YzSgwCvZGrlYeA"
-    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
+    url = f"https://docs.google.com/spreadsheets/d/{{sheet_id}}/export?format=csv"
     try:
         data = pd.read_csv(url)
         data.columns = [c.strip() for c in data.columns]
@@ -118,15 +118,15 @@ c1, c2, c3, c4 = st.columns(4)
 def draw_button(label, val, key):
     is_active = st.session_state.filter == val
     btn_bg = MY_GREEN if is_active else MY_BLUE
-    st.markdown(f"<style>div.stButton > button[key='{key}'] {{ background-color: {btn_bg} !important; }}</style>", unsafe_allow_html=True)
+    st.markdown(f"<style>div.stButton > button[key='{{key}}'] {{ background-color: {{btn_bg}} !important; }}</style>", unsafe_allow_html=True)
     if st.button(label, key=key):
         st.session_state.filter = val
         st.rerun()
 
-with c1: draw_button(f"📖 TOTAL\n{total}", 'All', 'b1')
-with c2: draw_button(f"🏛️ NOMS\n{noms}", 'N', 'b2')
-with c3: draw_button(f"🚀 VERBES\n{verbes}", 'v', 'b3')
-with c4: draw_button(f"🎨 ADJECTIFS\n{adjs}", 'adj', 'b4')
+with c1: draw_button(f"📖 TOTAL\n{{total}}", 'All', 'b1')
+with c2: draw_button(f"🏛️ NOMS\n{{noms}}", 'N', 'b2')
+with c3: draw_button(f"🚀 VERBES\n{{verbes}}", 'v', 'b3')
+with c4: draw_button(f"🎨 ADJECTIFS\n{{adjs}}", 'adj', 'b4')
 
 st.divider()
 
