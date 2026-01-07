@@ -4,93 +4,99 @@ import pandas as pd
 # 1. إعدادات الصفحة
 st.set_page_config(page_title="Belleville 2030", layout="wide")
 
-# 2. تنسيق CSS مخصص للزراير (الكروت) والنص الفلسفي
+# 2. تنسيق CSS للتفاعل والألوان
 st.markdown("""
     <style>
-    /* تنسيق النص الفلسفي */
-    .quote-text {
-        font-family: 'Georgia', serif;
-        font-style: italic;
-        color: #1e293b;
-        text-align: center;
-        font-size: 1.4rem !important;
-        margin: 20px 0;
-        border-left: 5px solid #24bf57;
-        padding: 10px;
-        background-color: #f8fafc;
-    }
-    /* تنسيق الكروت (الزراير) */
-    .stat-card {
+    div.stButton > button {
+        width: 100%;
+        height: 120px;
         background-color: white;
-        padding: 20px;
+        color: #1e293b;
         border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        text-align: center;
-        border-bottom: 5px solid #2596be;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
     }
-    .stat-value { font-size: 2rem; font-weight: bold; color: #1e293b; }
-    .stat-label { color: #64748b; font-size: 1rem; }
+    div.stButton > button:hover {
+        background: linear-gradient(135deg, #24bf57 0%, #1a9344 100%);
+        color: white !important;
+        transform: translateY(-5px);
+    }
+    .quote-box {
+        text-align: center;
+        padding: 15px;
+        background: #f8fafc;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        border-left: 5px solid #24bf57;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. القائمة الجانبية (Sidebar)
+# 3. القائمة الجانبية
 with st.sidebar:
     st.title("Belleville 2030")
     st.image("https://lh3.googleusercontent.com/u/0/d/1702IVuPmDCISvkfvpdTwYJ5_aDPrvcQU", width=80)
     st.markdown("### **Bonjour Mon Ami**")
     st.write("---")
-    st.caption("Magazine Project Dashboard")
 
-# 4. النص الفلسفي (بشكل أصغر وأشيك)
-st.markdown('<div class="quote-text">"Peut-être n\'es-tu pas né sur cette terre, mais tu naitras là où tu apprendras."</div>', unsafe_allow_html=True)
+# 4. المقولة الفلسفية
+st.markdown('<div class="quote-box"><h3 style="font-style: italic; margin:0;">"Peut-être n\'es-tu pas né sur cette terre, mais tu naitras là où tu apprendras."</h3></div>', unsafe_allow_html=True)
 
 # 5. جلب البيانات
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1RMpE1HR_rsgy9luptAHgD0DyTpD1uTYBTbTKNLOWYbI/export?format=csv"
 
 @st.cache_data(ttl=60)
 def load_data():
-    try:
-        df = pd.read_csv(SHEET_URL)
-        return df
-    except:
-        return pd.DataFrame()
+    try: return pd.read_csv(SHEET_URL)
+    except: return pd.DataFrame()
 
 df = load_data()
 
-# 6. عرض الكروت (Statistiques) زي الصورة اللي أرفقتها
 if not df.empty:
-    mots_total = len(df)
-    verbes = len(df[df['Type'].str.contains('Verbe', na=False, case=False)])
-    noms = len(df[df['Type'].str.contains('Nom', na=False, case=False)])
-    adjectifs = len(df[df['Type'].str.contains('Adjectif', na=False, case=False)])
+    # تهيئة حالة الفلتر في الجلسة (Session State)
+    if 'filter' not in st.session_state:
+        st.session_state.filter = 'Total'
 
+    # حساب الأرقام
+    total_val = len(df)
+    noms_val = len(df[df['Type'].str.contains('Nom', na=False, case=False)])
+    verbes_val = len(df[df['Type'].str.contains('Verbe', na=False, case=False)])
+    adj_val = len(df[df['Type'].str.contains('Adjectif', na=False, case=False)])
+
+    # 6. توزيع الكروت كأزرار تفاعلية للفلترة
     col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.markdown(f'<div class="stat-card" style="border-bottom-color: #24bf57;"><div class="stat-label">Total</div><div class="stat-value">{mots_total}</div></div>', unsafe_allow_html=True)
-    with col2:
-        st.markdown(f'<div class="stat-card"><div class="stat-label">Noms</div><div class="stat-value">{noms}</div></div>', unsafe_allow_html=True)
-    with col3:
-        st.markdown(f'<div class="stat-card"><div class="stat-label">Verbes</div><div class="stat-value">{verbes}</div></div>', unsafe_allow_html=True)
-    with col4:
-        st.markdown(f'<div class="stat-card" style="border-bottom-color: #a855f7;"><div class="stat-label">Adjectifs</div><div class="stat-value">{adjectifs}</div></div>', unsafe_allow_html=True)
-
-    st.write("### Liste des mots")
-    search = st.text_input("🔍 Rechercher un mot...")
     
-    if search:
-        df_display = df[df.apply(lambda row: row.astype(str).str.contains(search, case=False).any(), axis=1)]
+    with col1:
+        if st.button(f"Total\n{total_val}"): st.session_state.filter = 'Total'
+    with col2:
+        if st.button(f"Noms\n{noms_val}"): st.session_state.filter = 'Nom'
+    with col3:
+        if st.button(f"Verbes\n{verbes_val}"): st.session_state.filter = 'Verbe'
+    with col4:
+        if st.button(f"Adjectifs\n{adj_val}"): st.session_state.filter = 'Adjectif'
+
+    # 7. تطبيق الفلترة بناءً على الزر المضغوط
+    if st.session_state.filter == 'Total':
+        df_filtered = df
     else:
-        df_display = df
+        df_filtered = df[df['Type'].str.contains(st.session_state.filter, na=False, case=False)]
 
-    # 7. تلوين أنواع الكلمات في الجدول
+    st.write(f"### Liste: {st.session_state.filter}")
+    
+    # محرك البحث الإضافي
+    search = st.text_input("🔍 Rechercher...")
+    if search:
+        df_filtered = df_filtered[df_filtered.apply(lambda row: row.astype(str).str.contains(search, case=False).any(), axis=1)]
+
+    # 8. تلوين أنواع الكلمات في الجدول
     def style_types(val):
-        if str(val).lower() == 'verbe': color = 'background-color: #dcfce7; color: #166534'
-        elif str(val).lower() == 'nom': color = 'background-color: #e0f2fe; color: #075985'
-        elif str(val).lower() == 'adjectif': color = 'background-color: #f3e8ff; color: #6b21a8'
-        else: color = ''
-        return f'{color}; font-weight: bold; border-radius: 10px;'
+        color_map = {
+            'verbe': 'background-color: #dcfce7; color: #166534',
+            'nom': 'background-color: #e0f2fe; color: #075985',
+            'adjectif': 'background-color: #f3e8ff; color: #6b21a8'
+        }
+        style = color_map.get(str(val).lower(), '')
+        return f'{style}; font-weight: bold; border-radius: 8px;'
 
-    st.table(df_display.style.applymap(style_types, subset=['Type']))
-
-else:
-    st.warning("⚠️ الجدول فارغ، تأكد من ربط Google Sheets.")
+    st.table(df_filtered.style.applymap(style_types, subset=['Type']))
