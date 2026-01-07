@@ -1,78 +1,89 @@
 import streamlit as st
 import pandas as pd
 
-# إعداد الصفحة وتنسيق الأبعاد
+# إعداد الصفحة
 st.set_page_config(page_title="Mina's Belleville 2030", page_icon="🏗️", layout="wide")
 
-# تصميم المربعات المنفصلة (CSS) - الأكشن اللي طلبته
+# تصميم المربعات كأزرار تفاعلية (CSS)
 st.markdown("""
     <style>
-    .main { background-color: #0e1117; }
-    .metric-card {
+    div.stButton > button {
+        width: 100%;
         background-color: #161b22;
+        color: white;
         border: 2px solid #58a6ff;
-        border-radius: 12px;
+        border-radius: 15px;
         padding: 20px;
-        text-align: center;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        transition: 0.3s;
     }
-    .metric-label { font-size: 18px; color: #58a6ff; font-weight: bold; margin-bottom: 5px; }
-    .metric-value { font-size: 38px; color: #ffffff; font-weight: bold; }
+    div.stButton > button:hover {
+        background-color: #58a6ff;
+        color: black;
+        border-color: white;
+    }
+    .metric-label { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+    .metric-value { font-size: 32px; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
-# ربط ملف جوجل شيت (الرابط اللي بعتهولي)
+# ربط جوجل شيت
 sheet_id = "1-iAlhlDViZ_dNIjRfv6PRTEA8RPI_YzSgwCvZGrlYeA"
 sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
 
 def load_data():
     try:
-        # استيراد البيانات وتجنب التخزين المؤقت لسرعة التحديث
         return pd.read_csv(sheet_url)
     except:
         return pd.DataFrame(columns=["Mots", "Type", "المعنى"])
 
 df = load_data()
 
-# واجهة المستخدم
+# عنوان التطبيق
 st.title("Bonjour Mina ☕")
-st.markdown("### 🇫🇷 Belleville 2030: Journal d'un Ingénieur")
-st.divider()
+st.markdown("### 🇫🇷 Dashboard Interactif - Belleville")
 
-# حساب العدادات بناءً على اختصاراتك (N, v, adj)
-if not df.empty:
-    mots_count = len(df)
-    noms_count = len(df[df['Type'].str.strip() == 'N']) if 'Type' in df.columns else 0
-    verbes_count = len(df[df['Type'].str.strip() == 'v']) if 'Type' in df.columns else 0
-    adj_count = len(df[df['Type'].str.strip() == 'adj']) if 'Type' in df.columns else 0
-else:
-    mots_count = noms_count = verbes_count = adj_count = 0
+# حالة العرض (عشان الأكشن)
+if 'filter' not in st.session_state:
+    st.session_state.filter = 'All'
 
-# عرض المربعات في صف واحد منفصل
+# حساب العدادات
+total = len(df)
+noms = len(df[df['Type'].str.strip() == 'N']) if not df.empty else 0
+verbes = len(df[df['Type'].str.strip() == 'v']) if not df.empty else 0
+adjs = len(df[df['Type'].str.strip() == 'adj']) if not df.empty else 0
+
+# عرض المربعات كأزرار (هنا الأكشن اللي طلبته)
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    st.markdown(f'<div class="metric-card"><div class="metric-label">📊 Mots</div><div class="metric-value">{mots_count}</div></div>', unsafe_allow_html=True)
+    if st.button(f"📊 Mots\n{total}"): st.session_state.filter = 'All'
 with col2:
-    st.markdown(f'<div class="metric-card"><div class="metric-label">🏛️ Noms</div><div class="metric-value">{noms_count}</div></div>', unsafe_allow_html=True)
+    if st.button(f"🏛️ Noms (N)\n{noms}"): st.session_state.filter = 'N'
 with col3:
-    st.markdown(f'<div class="metric-card"><div class="metric-label">🚀 Verbes</div><div class="metric-value">{verbes_count}</div></div>', unsafe_allow_html=True)
+    if st.button(f"🚀 Verbes (v)\n{verbes}"): st.session_state.filter = 'v'
 with col4:
-    st.markdown(f'<div class="metric-card"><div class="metric-label">🎨 Adjectifs</div><div class="metric-value">{adj_count}</div></div>', unsafe_allow_html=True)
+    if st.button(f"🎨 Adjs (adj)\n{adjs}"): st.session_state.filter = 'adj'
 
 st.divider()
 
-# البحث الذكي
-search_query = st.text_input("🔍 Rechercher (ابحث عن كلمة، نوع، أو معنى)...")
-
-if search_query:
-    # البحث في كل الخانات
-    filtered_df = df[df.apply(lambda row: row.astype(str).str.contains(search_query, case=False).any(), axis=1)]
-    st.dataframe(filtered_df, use_container_width=True)
+# تطبيق الفلتر بناءً على الزرار اللي اتضغط
+if st.session_state.filter == 'All':
+    display_df = df
+    label = "Tous les mots (الكل)"
 else:
-    st.subheader("Ma Liste Actuelle (قائمة الكلمات)")
-    st.dataframe(df, use_container_width=True)
+    display_df = df[df['Type'].str.strip() == st.session_state.filter]
+    label = f"Filtré par: {st.session_state.filter}"
 
-# زر تحديث البيانات
+# محرك البحث والجدول
+st.subheader(label)
+search = st.text_input("🔍 Rechercher...")
+
+if search:
+    mask = display_df.apply(lambda row: row.astype(str).str.contains(search, case=False).any(), axis=1)
+    st.table(display_df[mask])
+else:
+    st.table(display_df)
+
+# زر التحديث
 if st.sidebar.button("🔄 Actualiser"):
     st.rerun()
