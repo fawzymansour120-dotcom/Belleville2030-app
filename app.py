@@ -1,138 +1,39 @@
 import streamlit as st
 import pandas as pd
 
-# 1. إعداد الصفحة والخطوط
-st.set_page_config(page_title="Mina's Belleville 2030", page_icon="🏗️", layout="wide")
+# 1. إعداد الصفحة
+st.set_page_config(page_title="Belleville 2030", page_icon="🏗️", layout="wide")
 
-# 2. المحور الجمالي: CSS للألوان والأكشن والخطوط
-st.markdown("""
-    <style>
-    /* تغيير الخط العام */
-    html, body, [class*="css"] {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+# 2. التنسيق الجمالي (CSS)
+BG_COLOR = "#121212"
+VIBRANT_BLUE = "#007bff" # أزرق زاهي للدخول
+BLUE_DARK = "#1a2a3a"    # أزرق غامق للزراير
+GREEN_ACTIVE = "#28a745" # أخضر زاهي للنشط
+GOLD_COLOR = "#d4af37"
 
-    /* تصميم الأزرار الأربعة مع تأثير التوهج عند الوقوف عليها */
-    div.stButton > button {
-        width: 100%;
-        height: 100px; /* التحكم في حجم المربع */
-        background-color: #161b22;
-        color: #58a6ff;
-        border: 2px solid #30363d;
-        border-radius: 15px;
-        font-size: 20px;
-        font-weight: bold;
-        transition: all 0.3s ease-in-out;
-    }
-
-    /* الأكشن: التوهج بلون مختلف عند الوقوف على الزر */
-    div.stButton > button:hover {
-        border-color: #00d4ff; /* لون فسفوري */
-        color: #ffffff;
-        box-shadow: 0 0 15px #00d4ff; /* تأثير التوهج */
-        transform: translateY(-5px); /* حركة خفيفة للأعلى */
-    }
-
-    /* تصميم زر تسجيل الدخول */
-    .stTextInput>div>div>input {
-        border-radius: 10px;
-    }
-
-    /* صورة البروفايل */
-    .header-container {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px;
-        background: #161b22;
-        border-radius: 50px;
-        width: fit-content;
-        border: 1px solid #30363d;
-    }
-    .profile-pic {
-        width: 35px;
-        height: 35px;
-        border-radius: 50%;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# 3. نظام الدخول
-if 'authenticated' not in st.session_state:
-    st.session_state.authenticated = False
-if 'user_name' not in st.session_state:
-    st.session_state.user_name = ""
-
-if not st.session_state.authenticated:
-    st.markdown("<h1 style='text-align: center;'>Bonjour 👋</h1>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 1.5, 1])
-    with col2:
-        name = st.text_input("Prénom")
-        password = st.text_input("Mot de passe", type="password")
-        if st.button("Se connecter"):
-            if password == "1234" and name.strip() != "":
-                st.session_state.authenticated = True
-                st.session_state.user_name = name
-                st.rerun()
-    st.stop()
-
-# --- بعد الدخول ---
-# الهيدر الشخصي
-gemini_pic = "https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d473530393333333333.svg"
 st.markdown(f"""
-    <div class="header-container">
-        <img src="{gemini_pic}" class="profile-pic">
-        <span style="color:white; font-weight:bold;">Bonjour, {st.session_state.user_name}</span>
-    </div>
-    """, unsafe_allow_html=True)
+    <style>
+    .stApp {{ background-color: {BG_COLOR}; }}
+    
+    /* تصميم زر الدخول الزاهي */
+    div.stButton > button[kind="primary"] {{
+        background: {VIBRANT_BLUE};
+        color: white !important;
+        border: none;
+        font-weight: bold;
+        font-size: 20px;
+        border-radius: 30px;
+        padding: 10px 20px;
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+        transition: 0.3s;
+        width: 100%;
+    }}
+    div.stButton > button[kind="primary"]:hover {{
+        background: #0056b3;
+        box-shadow: 0 6px 20px rgba(0, 123, 255, 0.6);
+        transform: scale(1.02);
+    }}
 
-# جلب البيانات
-@st.cache_data(ttl=60) # تحديث كل دقيقة
-def get_data():
-    sheet_id = "1-iAlhlDViZ_dNIjRfv6PRTEA8RPI_YzSgwCvZGrlYeA"
-    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
-    try:
-        data = pd.read_csv(url)
-        data.columns = [c.strip() for c in data.columns]
-        return data
-    except:
-        return pd.DataFrame(columns=["Mots", "Type", "المعنى"])
-
-df = get_data()
-
-if 'filter_type' not in st.session_state:
-    st.session_state.filter_type = 'All'
-
-st.title("Belleville 2030 🏗️")
-st.divider()
-
-# حساب العدادات
-total = len(df)
-noms = len(df[df['Type'].str.contains('N', na=False)]) if 'Type' in df.columns else 0
-verbes = len(df[df['Type'].str.contains('v', na=False)]) if 'Type' in df.columns else 0
-adjs = len(df[df['Type'].str.contains('adj', na=False)]) if 'Type' in df.columns else 0
-
-# المربعات الأربعة التفاعلية
-c1, c2, c3, c4 = st.columns(4)
-with c1:
-    if st.button(f"📊 Mots\n{total}"): st.session_state.filter_type = 'All'
-with c2:
-    if st.button(f"🏛️ Noms\n{noms}"): st.session_state.filter_type = 'N'
-with c3:
-    if st.button(f"🚀 Verbes\n{verbes}"): st.session_state.filter_type = 'v'
-with c4:
-    if st.button(f"🎨 Adjs\n{adjs}"): st.session_state.filter_type = 'adj'
-
-st.divider()
-
-# عرض النتائج
-if st.session_state.filter_type == 'All':
-    filtered_df = df
-else:
-    filtered_df = df[df['Type'].str.contains(st.session_state.filter_type, na=False)]
-
-st.table(filtered_df)
-
-if st.sidebar.button("Déconnexion"):
-    st.session_state.authenticated = False
-    st.rerun()
+    /* تصميم الزراير الأربعة */
+    div.stButton > button {{
+        width: 100
